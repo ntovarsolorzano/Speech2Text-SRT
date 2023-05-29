@@ -42,7 +42,8 @@ def download_audio_from_youtube(url):
             downloaded_audio = audio_stream.download(filename="audio")
             video_name = yt.title
             print(f"Found: {video_name}")
-            print("Audio downloaded successfully.")
+            print("Audio downloaded successfully. ")
+            print("This gonna take a while... Go take a coffee...")
         else:
             print("No audio stream available.")
     except:
@@ -52,7 +53,7 @@ def download_audio_from_youtube(url):
 
 # 1. Define the audio to be used
 # Example usage
-print("Paste the YouTube video URL: \n")
+print("\nPaste the YouTube video URL: \n")
 Youtube_URL = input() # Example "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 file, video_name = download_audio_from_youtube(Youtube_URL)
 # Clean video_name
