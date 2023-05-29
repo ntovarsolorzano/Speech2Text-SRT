@@ -8,6 +8,6 @@ I suggest small, or medium. These are good enough. If you have a beast CPU you c
 
 *Time to process: *  
 (my experience ~ reference only)   
-Base: 0.12*VideoLength  
-Small: 0.9*VideoLength  
-Medium: 2.1*VideoLength  
+Base: 0.12 x VideoLength  
+Small: 0.9 x VideoLength  
+Medium: 2.1 x VideoLength  
