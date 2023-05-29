@@ -11,7 +11,7 @@ Do not forget to install libraries:
 Paste it into your Python IDE or run as:  
 `git clone https://github.com/ntovarsolorzano/python_for_lazies`  
 `cd python_for_lazies`  
-`python3 Youtube_to_SRT_whisperai.py`
+`python Youtube_to_SRT_whisperai.py`
 
 ## Youtube to SRT using Whisper  
 Python script to Get a YouTube URL and return a SRT file in its language (English).   
