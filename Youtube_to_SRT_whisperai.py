@@ -52,7 +52,8 @@ def download_audio_from_youtube(url):
 
 # 1. Define the audio to be used
 # Example usage
-Youtube_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+print("Paste the YouTube video URL: \n")
+Youtube_URL = input() # Example "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 file, video_name = download_audio_from_youtube(Youtube_URL)
 # Clean video_name
 video_name = name_cleaner(video_name)
