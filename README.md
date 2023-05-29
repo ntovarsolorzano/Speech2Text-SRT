@@ -1,5 +1,7 @@
 # python_for_lazies
 My scripts that I use to automate stuff, because I hate wasting time. You can use it if it's useful to you.   
+Paste it into your Python IDE or run as:  
+`python3 Youtube_to_SRT_whisperai.py`
 
 ## Youtube to SRT using Whisper  
 Python script to Get a YouTube URL and return a SRT file in its language (English).   
