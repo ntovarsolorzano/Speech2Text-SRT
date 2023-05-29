@@ -3,11 +3,11 @@ My scripts that I use to automate stuff, because I hate wasting time. You can us
 
 # Requisites: 
 Do not forget to install libraries:  
-`pip install git+https://github.com/openai/whisper.git -q`
-`pip install setuptools-rust`
-`pip install ffmpeg-python`
-`pip install git+https://github.com/pytube/pytube.git -q`
-
+`pip install git+https://github.com/openai/whisper.git -q`  
+`pip install setuptools-rust`  
+`pip install ffmpeg-python`  
+`pip install git+https://github.com/pytube/pytube.git -q`  
+  
 Paste it into your Python IDE or run as:  
 `git clone https://github.com/ntovarsolorzano/python_for_lazies`  
 `cd python_for_lazies`  
