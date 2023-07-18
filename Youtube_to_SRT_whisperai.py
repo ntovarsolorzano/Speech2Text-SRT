@@ -136,6 +136,3 @@ print("File saved at: ", cwd)
 
 # Github WhisperAI
 # URL: https://github.com/openai/whisper
-
-
-allModels = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large"]
