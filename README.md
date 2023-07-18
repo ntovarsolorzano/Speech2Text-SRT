@@ -24,5 +24,8 @@ Base: 0.12 x VideoLength
 Small: 0.9 x VideoLength  
 Medium: 2.1 x VideoLength  
 
+UPDATE: 
+Added the GPU (CUDA) line to the code. Now, using 'base' model on English video of 17 minutes, it takes around 30 secs. 
+
 # Credits to:  
 [OpenAI](https://github.com/openai/whisper) for making this awesome tool available to the rest of us, simple mortals. 
