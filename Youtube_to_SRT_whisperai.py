@@ -21,6 +21,7 @@ import re
 from pytube import YouTube
 from datetime import timedelta
 import random
+import time
 import os
 import torch
 
@@ -73,6 +74,7 @@ if file:
     # 2. Use the trained model to transcript the audio
     #Load model Models: tiny, base, small, medium, large.
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("GPU detected") if torch.cuda.is_available() else print("Using CPU. This may take as long as the video or more.")
 
     # Select a model: 
     all_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large"]
@@ -95,6 +97,7 @@ if file:
 
     # Make use of that model
     model = whisper.load_model(selected_model).to(device)
+    time1 = time.time()
     trans = model.transcribe(file)
 
     # 3. Write the SRT file
@@ -135,6 +138,9 @@ if file:
             f.write(f"{add_text}\n\n")
 
     print(f"Subtitle file saved as: yt_{video_name}.srt")
+    elapsed_time = time.time() - time1
+    elapsed_time = round( (elapsed_time/60), 1)
+    print(f"Took {elapsed_time} minutes")
 
     with open(f'yt_{video_name}.txt', 'w') as f:
         f.write(trans['text'])
