@@ -1,0 +1,104 @@
+from faster_whisper import WhisperModel
+import re
+import time
+
+# Define the mapping from numbers to model names
+models = {
+    1: "large-v2",
+    2: "medium",
+    3: "medium.en",
+    4: "small",
+    5: "small.en",
+    6: "base",
+    7: "base.en",
+    8: "tiny",
+    9: "tiny.en"
+}
+
+# Print the options
+for number, model in models.items():
+    print("(%d) > %s" % (number, model))
+
+while True:
+    # Ask the user to pick a number
+    user_input = int(input("Please enter a number: "))
+
+    # Get the model name corresponding to the number
+    model_name = models.get(user_input)
+
+    if model_name is not None:
+        print("Model to be used: %s" % model_name)
+        break
+    else:
+        print("Invalid selection. Please try again.")
+
+
+model_size = model_name
+
+# Run on GPU with FP16
+model = WhisperModel(model_size, device="cuda", compute_type="float16")
+
+# or run on GPU with INT8
+# model = WhisperModel(model_size, device="cuda", compute_type="int8_float16")
+# or run on CPU with INT8
+# model = WhisperModel(model_size, device="cpu", compute_type="int8")
+
+filename = input("Type the filename including the extension: ")
+segments, info = model.transcribe(filename, beam_size=5)
+
+print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+
+def format_time(seconds):
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    if hours > 0:
+        return "%d:%02d:%02d h" % (hours, minutes, seconds)
+    elif minutes > 0:
+        return "%d:%02d min" % (minutes, seconds)
+    else:
+        return "%.3f s" % seconds
+
+def name_cleaner(name):
+    clean_name = re.sub(r'[^\w\-_\. ]', '', name)
+    clean_name = re.sub(r'\s+', ' ', clean_name)
+    clean_name = clean_name.strip()
+    
+    arr = clean_name.split(" ")
+    if len(arr) > 5:
+        clean_name = arr[0] + "_" +  arr[1] + "_"  + arr[2] + "_"  + arr[3] + "_"  + arr[4] + "_"  + arr[5]
+    else:
+         pass   
+    return clean_name
+
+# Record the start time
+start_time = time.time()
+
+new_filename = name_cleaner(filename)
+# Open the files in write mode
+with open(f'{new_filename}_segments.txt', 'w') as seg_file, open(f'{new_filename}_text_only.txt', 'w') as text_file:
+    for segment in segments:
+        # Write the segment to the first file
+        seg_file.write("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
+        # Write only the text to the second file
+        text_file.write("%s\n" % segment.text)
+        
+        print(f"Progress: {format_time(segment.end)}")
+
+# Record the end time
+end_time = time.time()
+
+# Calculate the elapsed time in seconds
+elapsed_time_seconds = end_time - start_time
+
+# Print the elapsed time
+if elapsed_time_seconds < 60:
+    print(f"Elapsed Time: {elapsed_time_seconds:.2f} seconds")
+elif elapsed_time_seconds < 3600:
+    elapsed_time_minutes = elapsed_time_seconds / 60
+    print(f"Elapsed Time: {elapsed_time_minutes:.2f} minutes")
+else:
+    elapsed_time_hours = elapsed_time_seconds / 3600
+    print(f"Elapsed Time: {elapsed_time_hours:.2f} hours")
+    
+    
