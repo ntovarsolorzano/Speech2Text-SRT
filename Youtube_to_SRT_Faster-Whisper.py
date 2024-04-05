@@ -17,7 +17,7 @@ from google.colab import userdata
 userdata.get('HF_TOKEN')
 
 # Save files into Google Drive
-save_drive = True
+save_drive = False
 
 if save_drive:
   from google.colab import drive
@@ -49,19 +49,21 @@ models = {
 for number, model in models.items():
     print("(%d) > %s" % (number, model))
 
-while True:
-    # Ask the user to pick a number
-    user_input = int(input("Please enter a number: "))
+# Get user input
+user_input = input("Please enter the number of the model you want to use: ")
 
-    # Get the model name corresponding to the number
-    model_name = models.get(user_input)
+# Validate user input
+while not user_input.isdigit() or int(user_input) not in models:
+    print("Invalid input. Please enter a number corresponding to a model.")
+    user_input = input("Please enter the number of the model you want to use: ")
 
-    if model_name is not None:
-        print("Model to be used: %s" % model_name)
-        break
-    else:
-        print("Invalid selection. Please try again.")
+# Get the model name corresponding to the number
+user_input = int(user_input)
+model_name = models.get(user_input)
+print("Model to be used: %s" % model_name)
+model_size = model_name
 
+# Defining functions
 def print_audio_duration(file_name):
     probe = ffmpeg.probe(file_name)
     duration = float(probe['format']['duration'])
@@ -70,8 +72,6 @@ def print_audio_duration(file_name):
     minutes = int((duration % 3600) // 60)
     seconds = int(duration % 60)
     print(f"Audio duration: {hours} hours, {minutes} minutes, and {seconds} seconds")
-
-model_size = model_name
 
 # Run on GPU with FP16
 model = WhisperModel(model_size, device="cuda", compute_type="float16")
@@ -95,18 +95,17 @@ segments, info = model.transcribe(filename, beam_size=5)
 print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
 
 # Start time read
-start_time = time.time()
+begin_time = time.time()
 
 def format_time(seconds):
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = seconds % 60
-    if hours > 0:
-        return "%d:%02d:%02d h" % (hours, minutes, seconds)
-    elif minutes > 0:
-        return "%d:%02d min" % (minutes, seconds)
-    else:
-        return "%.3f s" % seconds
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    seconds = int(seconds % 60)
+    milliseconds = int((seconds % 1) * 1000)
+
+    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
+
+
 
 def name_cleaner(name):
     clean_name = re.sub(r'[^\w\-_\. ]', '', name)
@@ -123,18 +122,23 @@ def name_cleaner(name):
 new_filename = name_cleaner(filename)
 # Open the files in write mode
 
-with open(f'{new_filename}_segments.txt', 'w') as seg_file, open(f'{new_filename}_text_only.txt', 'w') as text_file:
-    for segment in segments:
-        # Write the segment to the first file
-        seg_file.write("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
+with open(f'{new_filename}_segments.srt', 'w') as srt_file, open(f'{new_filename}_text_only.txt', 'w') as text_file:
+    for i, segment in enumerate(segments, start=1):
+        start_time = format_time(segment.start)
+        end_time = format_time(segment.end)
+        text = segment.text
+
+        # Write the subtitle number, time range, and text to the file
+        srt_file.write(f"{i}\n{start_time} --> {end_time}\n{text}\n\n")
+
         # Write only the text to the second file
         text_file.write("%s\n" % segment.text)
 
-        print(f"Progress: {format_time(segment.end)}")
+        print(f"Progress: {end_time}")
 
 end_time = time.time()
 
-execution_time = end_time - start_time
+execution_time = end_time - begin_time
 
 if execution_time > 60:
     if execution_time > 3600:
@@ -152,8 +156,8 @@ new_filename2 = name_cleaner(new_filename2)
 # Copying files into Google Drive
 if save_drive:
   # Segments
-  source_path = f'{new_filename}_segments.txt'
-  dest_path = f"/content/drive/My Drive/Colab Notebooks/Transcriptions/{new_filename2}_segments.txt"
+  source_path = f'{new_filename}_segments.srt'
+  dest_path = f"/content/drive/My Drive/Colab Notebooks/Transcriptions/{new_filename2}_segments.srt"
   shutil.copyfile(source_path, dest_path)
   # Full Text
   source_path = f'{new_filename}_text_only.txt'
@@ -161,5 +165,5 @@ if save_drive:
   shutil.copyfile(source_path, dest_path)
 
 # Rename local filenames
-os.rename('audio.m4a_segments.txt', 'segments_{}.txt'.format(new_filename2))
-os.rename('audio.m4a_text_only.txt', 'text_only_{}.txt'.format(new_filename2))
+os.rename(f'{new_filename}_segments.srt', 'segments_{}.srt'.format(new_filename2))
+os.rename(f'{new_filename}_text_only.txt', 'text_only_{}.txt'.format(new_filename2))
