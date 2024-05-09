@@ -98,11 +98,11 @@ print("Detected language '%s' with probability %f" % (info.language, info.langua
 begin_time = time.time()
 
 def format_time(seconds):
-  """Converts seconds to SRT time format (hh:mm:ss.mmm)"""
-  hours = int(seconds // 3600)
-  minutes = int((seconds % 3600) // 60)
-  seconds = seconds % 60
-  return f"{hours:02d}:{minutes:02d}:{seconds:.03f}"
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    seconds = int(seconds % 60)
+    milliseconds = int((seconds % 1) * 1000)
+    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
 
 
