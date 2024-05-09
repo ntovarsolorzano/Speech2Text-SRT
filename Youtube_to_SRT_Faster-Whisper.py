@@ -98,12 +98,11 @@ print("Detected language '%s' with probability %f" % (info.language, info.langua
 begin_time = time.time()
 
 def format_time(seconds):
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    seconds = int(seconds % 60)
-    milliseconds = int((seconds % 1) * 1000)
-
-    return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
+  """Converts seconds to SRT time format (hh:mm:ss.mmm)"""
+  hours = int(seconds // 3600)
+  minutes = int((seconds % 3600) // 60)
+  seconds = seconds % 60
+  return f"{hours:02d}:{minutes:02d}:{seconds:.03f}"
 
 
 
@@ -122,17 +121,19 @@ def name_cleaner(name):
 new_filename = name_cleaner(filename)
 # Open the files in write mode
 
-with open(f'{new_filename}_segments.srt', 'w') as srt_file, open(f'{new_filename}_text_only.txt', 'w') as text_file:
+with open(f'{new_filename}_segments.srt', 'w') as srt_file, \
+     open(f'{new_filename}_text_only.txt', 'w') as text_file:
+    
     for i, segment in enumerate(segments, start=1):
         start_time = format_time(segment.start)
         end_time = format_time(segment.end)
         text = segment.text
 
-        # Write the subtitle number, time range, and text to the file
+        # Write the subtitle number, time range, and text to the SRT file
         srt_file.write(f"{i}\n{start_time} --> {end_time}\n{text}\n\n")
 
-        # Write only the text to the second file
-        text_file.write("%s\n" % segment.text)
+        # Write only the text to the text-only file
+        text_file.write(f"{text}\n")
 
         print(f"Progress: {end_time}")
 
