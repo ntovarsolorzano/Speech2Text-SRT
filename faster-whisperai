@@ -49,15 +49,11 @@ segments, info = model.transcribe(filename, beam_size=5)
 print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
 
 def format_time(seconds):
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = seconds % 60
-    if hours > 0:
-        return "%d:%02d:%02d h" % (hours, minutes, seconds)
-    elif minutes > 0:
-        return "%d:%02d min" % (minutes, seconds)
-    else:
-        return "%.3f s" % seconds
+  """Converts seconds to SRT time format (hh:mm:ss.mmm)"""
+  hours = int(seconds // 3600)
+  minutes = int((seconds % 3600) // 60)
+  seconds = seconds % 60
+  return f"{hours:02d}:{minutes:02d}:{seconds:.03f}"
 
 def name_cleaner(name):
     clean_name = re.sub(r'[^\w\-_\. ]', '', name)
@@ -76,14 +72,21 @@ start_time = time.time()
 
 new_filename = name_cleaner(filename)
 # Open the files in write mode
-with open(f'{new_filename}_segments.txt', 'w') as seg_file, open(f'{new_filename}_text_only.txt', 'w') as text_file:
-    for segment in segments:
-        # Write the segment to the first file
-        seg_file.write("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
-        # Write only the text to the second file
-        text_file.write("%s\n" % segment.text)
-        
-        print(f"Progress: {format_time(segment.end)}")
+with open(f'{new_filename}_segments.srt', 'w') as srt_file, \
+     open(f'{new_filename}_text_only.txt', 'w') as text_file:
+    
+    for i, segment in enumerate(segments, start=1):
+        start_time = format_time(segment.start)
+        end_time = format_time(segment.end)
+        text = segment.text
+
+        # Write the subtitle number, time range, and text to the SRT file
+        srt_file.write(f"{i}\n{start_time} --> {end_time}\n{text}\n\n")
+
+        # Write only the text to the text-only file
+        text_file.write(f"{text}\n")
+
+        print(f"Progress: {end_time}")
 
 # Record the end time
 end_time = time.time()
