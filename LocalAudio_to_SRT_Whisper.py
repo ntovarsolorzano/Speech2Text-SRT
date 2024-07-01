@@ -58,7 +58,7 @@ while True:
         print("Invalid selection. Please try again.")
 
 # Load model Models: tiny, base, small, medium, large.
-model = model_name
+model = whisper.load_model(model_name)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
