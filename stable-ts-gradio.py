@@ -24,26 +24,25 @@ MODEL_CHOICES = [
 TRANSCRIPTION_METHODS = ["Whisper", "Minimal-Whisper", "Faster-Whisper", "HuggingFace Whisper"]
 
 
-def transcribe_audio(audio_path, selected_model, transcription_method):
-  
+def transcribe_audio(audio_path, selected_model, transcription_method, enable_vad):
     # Begin time count
     start_time = time.time()
-    
+
     if transcription_method == "Whisper":
         model = stable_whisper.load_model(selected_model)
-        result = model.transcribe(audio_path, vad=True, ignore_compatibility=True)
+        result = model.transcribe(audio_path, vad=enable_vad, ignore_compatibility=True)
     elif transcription_method == "Minimal-Whisper":
         model = stable_whisper.load_model(selected_model)
-        result = model.transcribe_minimal(audio_path, vad=True)
+        result = model.transcribe_minimal(audio_path, vad=enable_vad)
     elif transcription_method == "Faster-Whisper":
         model = stable_whisper.load_faster_whisper(selected_model)
-        result = model.transcribe_stable(audio_path, vad=True)
+        result = model.transcribe_stable(audio_path, vad=enable_vad)
     elif transcription_method == "HuggingFace Whisper":
         model = stable_whisper.load_hf_whisper(selected_model)
-        result = model.transcribe(audio_path, vad=True)
+        result = model.transcribe(audio_path, vad=enable_vad)
     else:
         raise ValueError("Invalid transcription method selected.")
-    
+
     # Finish counting
     end_time = time.time()
 
@@ -56,7 +55,6 @@ def transcribe_audio(audio_path, selected_model, transcription_method):
     result.to_txt(txt_filename)
 
     # Calculate the time taken
-    
     time_taken = end_time - start_time
     minutes, seconds = divmod(time_taken, 60)
 
@@ -67,13 +65,13 @@ def transcribe_audio(audio_path, selected_model, transcription_method):
     )
 
 
-def transcribe_youtube(youtube_link, selected_model, delete_audio, transcription_method):
+def transcribe_youtube(youtube_link, selected_model, delete_audio, transcription_method, enable_vad):
     try:
         yt = YouTube(youtube_link)
         stream = yt.streams.filter(only_audio=True).first()
         downloaded_file = stream.download()
 
-        result = transcribe_audio(downloaded_file, selected_model, transcription_method)
+        result = transcribe_audio(downloaded_file, selected_model, transcription_method, enable_vad)
 
         if delete_audio:
             os.remove(downloaded_file)
@@ -83,10 +81,10 @@ def transcribe_youtube(youtube_link, selected_model, delete_audio, transcription
         return f"Error: {e}", None, None
 
 
-def transcribe_local_file(file, selected_model, transcription_method):
+def transcribe_local_file(file, selected_model, transcription_method, enable_vad):
     try:
         audio_path = file.name
-        return transcribe_audio(audio_path, selected_model, transcription_method)
+        return transcribe_audio(audio_path, selected_model, transcription_method, enable_vad)
     except Exception as e:
         return f"Error: {e}", None, None
 
@@ -108,6 +106,9 @@ with gr.Blocks() as interface:
         label="Select Transcription Method",
     )
 
+    # Checkbox for VAD enable/disable
+    enable_vad_checkbox = gr.Checkbox(label="Enable Voice Activity Detection (VAD)?", value=True)
+
     with gr.Tabs():
         with gr.TabItem("YouTube"):
             youtube_link = gr.Textbox(label="Enter YouTube Link")
@@ -118,7 +119,7 @@ with gr.Blocks() as interface:
             youtube_download = gr.Files(label="Download Transcription")
             youtube_button.click(
                 transcribe_youtube,
-                inputs=[youtube_link, model_dropdown, delete_audio_checkbox, transcription_method_dropdown],
+                inputs=[youtube_link, model_dropdown, delete_audio_checkbox, transcription_method_dropdown, enable_vad_checkbox],
                 outputs=[youtube_output, youtube_transcription, youtube_download],
             )
 
@@ -130,7 +131,7 @@ with gr.Blocks() as interface:
             local_download = gr.Files(label="Download Transcription")
             local_button.click(
                 transcribe_local_file,
-                inputs=[local_file, model_dropdown, transcription_method_dropdown],
+                inputs=[local_file, model_dropdown, transcription_method_dropdown, enable_vad_checkbox],
                 outputs=[local_output, local_transcription, local_download],
             )
 
