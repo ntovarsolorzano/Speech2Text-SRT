@@ -20,13 +20,31 @@ MODEL_CHOICES = [
     "large-v3",
 ]
 
+# Transcription methods
+TRANSCRIPTION_METHODS = ["Whisper", "Minimal-Whisper", "Faster-Whisper", "HuggingFace Whisper"]
 
-def transcribe_audio(audio_path, selected_model):
-    # Load the Whisper model
-    model = stable_whisper.load_model(selected_model)
-    
+
+def transcribe_audio(audio_path, selected_model, transcription_method):
+  
+    # Begin time count
     start_time = time.time()
-    result = model.transcribe(audio_path)
+    
+    if transcription_method == "Whisper":
+        model = stable_whisper.load_model(selected_model)
+        result = model.transcribe(audio_path, vad=True, ignore_compatibility=True)
+    elif transcription_method == "Minimal-Whisper":
+        model = stable_whisper.load_model(selected_model)
+        result = model.transcribe_minimal(audio_path, vad=True)
+    elif transcription_method == "Faster-Whisper":
+        model = stable_whisper.load_faster_whisper(selected_model)
+        result = model.transcribe_stable(audio_path, vad=True)
+    elif transcription_method == "HuggingFace Whisper":
+        model = stable_whisper.load_hf_whisper(selected_model)
+        result = model.transcribe(audio_path, vad=True)
+    else:
+        raise ValueError("Invalid transcription method selected.")
+    
+    # Finish counting
     end_time = time.time()
 
     # Save the transcription result as an SRT file
@@ -38,23 +56,24 @@ def transcribe_audio(audio_path, selected_model):
     result.to_txt(txt_filename)
 
     # Calculate the time taken
+    
     time_taken = end_time - start_time
     minutes, seconds = divmod(time_taken, 60)
 
     return (
         f"Transcription saved as {txt_filename}! Time taken: {int(minutes)} minutes and {int(seconds)} seconds",
         result.text,
-        [txt_filename, srt_filename],  # Return the filename instead of gr.File object
+        [txt_filename, srt_filename],
     )
 
 
-def transcribe_youtube(youtube_link, selected_model, delete_audio):
+def transcribe_youtube(youtube_link, selected_model, delete_audio, transcription_method):
     try:
         yt = YouTube(youtube_link)
         stream = yt.streams.filter(only_audio=True).first()
         downloaded_file = stream.download()
-        
-        result = transcribe_audio(downloaded_file, selected_model)
+
+        result = transcribe_audio(downloaded_file, selected_model, transcription_method)
 
         if delete_audio:
             os.remove(downloaded_file)
@@ -64,24 +83,31 @@ def transcribe_youtube(youtube_link, selected_model, delete_audio):
         return f"Error: {e}", None, None
 
 
-def transcribe_local_file(file, selected_model):
+def transcribe_local_file(file, selected_model, transcription_method):
     try:
         audio_path = file.name
-        return transcribe_audio(audio_path, selected_model)
+        return transcribe_audio(audio_path, selected_model, transcription_method)
     except Exception as e:
         return f"Error: {e}", None, None
 
 
 with gr.Blocks() as interface:
     gr.Markdown("## Speech-to-Text Transcription with Stable Whisper")
-    
+
     # Dropdown for model selection
     model_dropdown = gr.Dropdown(
         choices=MODEL_CHOICES,
         value="small",  # Default model
         label="Select Whisper Model",
     )
-    
+
+    # Dropdown for transcription method selection
+    transcription_method_dropdown = gr.Dropdown(
+        choices=TRANSCRIPTION_METHODS,
+        value="Whisper",  # Default method
+        label="Select Transcription Method",
+    )
+
     with gr.Tabs():
         with gr.TabItem("YouTube"):
             youtube_link = gr.Textbox(label="Enter YouTube Link")
@@ -92,7 +118,7 @@ with gr.Blocks() as interface:
             youtube_download = gr.Files(label="Download Transcription")
             youtube_button.click(
                 transcribe_youtube,
-                inputs=[youtube_link, model_dropdown, delete_audio_checkbox],  # Pass selected model
+                inputs=[youtube_link, model_dropdown, delete_audio_checkbox, transcription_method_dropdown],
                 outputs=[youtube_output, youtube_transcription, youtube_download],
             )
 
@@ -104,8 +130,8 @@ with gr.Blocks() as interface:
             local_download = gr.Files(label="Download Transcription")
             local_button.click(
                 transcribe_local_file,
-                inputs=[local_file, model_dropdown],  # Pass selected model
+                inputs=[local_file, model_dropdown, transcription_method_dropdown],
                 outputs=[local_output, local_transcription, local_download],
             )
 
-interface.launch(server_port=7950)
+interface.launch(server_port=7950, share=False)
