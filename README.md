@@ -1,4 +1,4 @@
-# python_for_lazies
+# Python scripts for Speech_to_Text
 My scripts that I use to automate stuff, because I hate wasting time. You can use it if it's useful to you.   
 
 # Requisites: 
